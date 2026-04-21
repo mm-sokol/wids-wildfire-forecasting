@@ -101,7 +101,10 @@ def reduce_features_by_PCA(
     """
 
     pca = PCA(n_components=n_features)
-    return pca.fit_transform(X_train)
+    X_pca = pca.fit_transform(X_train)
+
+    columns = [f"PCA_{i+1}" for i in range(n_features)]
+    return pd.DataFrame(X_pca, columns=columns, index=X_train.index)
 
 
 def filter_features_by_RFECV(
