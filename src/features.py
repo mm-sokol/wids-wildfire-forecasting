@@ -89,6 +89,16 @@ def reduce_features_by_PCA(
     X_train: pd.DataFrame,
     n_features: float
 ) -> pd.DataFrame:
+    """Function reduces number of features to a given number,
+    by selecting the directions, that explain the most variance in data (PCA).
+
+    Args:
+        X_train (pd.DataFrame): training dataframe
+        n_features (float): wanted number of features
+
+    Returns:
+        pd.DataFrame: training dataframe with PCA component features
+    """
 
     pca = PCA(n_components=n_features)
     return pca.fit_transform(X_train)
@@ -99,12 +109,27 @@ def filter_features_by_RFECV(
     X_train: pd.DataFrame,
     y_train: pd.Series,
     selection_metric: str = "accuracy",
-    n_folds: int = 5,
+    k_folds: int = 5,
     min_features: int = 5,
     step: int = 1
 ):
+    """Function filters features by checking their importance for 
+    given model by recursive feature elimination using k-fold crossvalidation.
 
-    cv = check_cv(n_folds, y_train, classifier=True) 
+    Args:
+        model (BaseEstimator): the model we'd like to use for classificaiton
+        X_train (pd.DataFrame): training dataframe
+        y_train (pd.Series): training labels
+        selection_metric (str, optional): the metric, we want to maximize in crossvalidation. Defaults to "accuracy".
+        k_folds (int, optional): Number of crossvalidaiton folds. Defaults to 5.
+        min_features (int, optional): the minimum number of features. Defaults to 5.
+        step (int, optional): the number of features which the model eliminates with each training run. Defaults to 1.
+
+    Returns:
+        _type_: _description_
+    """
+
+    cv = check_cv(k_folds, y_train, classifier=True) 
     selector = RFECV(
         estimator=model,
         step=step,
