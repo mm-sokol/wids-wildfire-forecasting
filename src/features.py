@@ -3,16 +3,14 @@ Code to create features for modeling
 """
 
 from pathlib import Path
+import pandas as pd
+import numpy as np
 
 from sklearn.linear_model import Lasso
 from sklearn.feature_selection import RFECV, SelectFromModel
 from sklearn.model_selection import check_cv
 from sklearn.base import BaseEstimator
 from sklearn.decomposition import PCA
-from src.config import PROCESSED_DATA_DIR
-
-import numpy as np
-import pandas as pd
 
 
 
