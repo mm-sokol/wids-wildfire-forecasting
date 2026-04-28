@@ -90,7 +90,7 @@ class ReduceByPCA(FeatureFilterBase):
             logger.warning("Number of X_train features ({}) is too low. PCA will not reduce dimensionality.", n_data_features)
             n_features_actual = n_data_features
             
-        elif self.n_features < n_data_features:
+        elif self.n_features > n_data_features:
             logger.info("Number of X_train features ({}) is not greater than n_features ({}) given to PCA", n_data_features, self.n_features)
             logger.info("PCA will reduce dimensionality by one.")
             n_features_actual = self.n_features-1
@@ -156,11 +156,12 @@ if __name__ == "__main__":
 
     df = pd.read_csv(PROCESSED_DATA_DIR / "train_clean.csv")
 
-    unused = ["event", "time_to_hit_hours", "event_id"]
+    exclude = ["event", "time_to_hit_hours", "event_id"]
+    target = ["event", "time_to_hit_hours"]
 
     X_train, X_test, y_train, y_test = train_test_split(
-        df[[c for c in df.columns if c not in unused]], 
-        df['time_to_hit_hours'], 
+        df[[c for c in df.columns if c not in exclude]],
+        df["time_to_hit_hours"], 
         test_size=0.2, 
         random_state=222,
     )
@@ -168,8 +169,9 @@ if __name__ == "__main__":
     pipeline = FeatureSelectionPipeline(filters=[
         FilterCorrelated(h_threshold=0.9),
         FilterTargetCorrelated(l_threshold=0.1),
-        ReduceByPCA(n_features=12)
+        ReduceByPCA(n_features=6)
     ])
     
+
     X_train_filtered = pipeline(X_train, y_train)
     print(X_train_filtered.columns)
