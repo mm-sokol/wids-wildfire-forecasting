@@ -16,6 +16,7 @@ from abc import ABC, abstractmethod
 from logging import getLogger
 
 from config import PROCESSED_DATA_DIR
+from lifelines import CoxPHFitter 
 
 logger = getLogger(__name__)
 
@@ -60,13 +61,22 @@ class FilterByL1(FeatureFilterBase):
         super().__init__()
         self.filter_strength = filter_strength
 
-    def apply(self, X_train: pd.DataFrame, y_train: pd.Series) -> pd.DataFrame:
-        
-        lasso = Lasso(alpha=self.filter_strength)
-        selector = SelectFromModel(lasso)
-        selector.fit(X_train, y_train)
-        selected_features = X_train.columns[selector.get_support()]
-        return X_train[selected_features], y_train
+    def apply(self, X_train: pd.DataFrame, y_train: pd.DataFrame) -> tuple:
+            df = X_train.copy()
+            df["time_to_hit_hours"] = y_train["time_to_hit_hours"]
+            df["event"] = y_train["event"].astype(int)
+
+            # l1_ratio=1.0 makes it a pure Lasso penalty
+            cox = CoxPHFitter(penalizer=self.filter_strength, l1_ratio=1.0)
+            cox.fit(df, duration_col="time_to_hit_hours", event_col="event")
+
+            coefficients = cox.summary["coef"]
+            feature_coefs = coefficients.loc[
+                X_train.columns
+            ]  
+            selected_features = feature_coefs[feature_coefs.abs() > 1e-5].index
+
+            return X_train[selected_features], y_train
 
 
 class ReduceByPCA(FeatureFilterBase):
@@ -149,7 +159,17 @@ class FeatureSelectionPipeline():
             X_train, y_train = f.apply(X_train, y_train)
         return X_train
 
-
+def main(
+    features_path: Path = PROCESSED_DATA_DIR / "features.csv",
+    data_path: Path = PROCESSED_DATA_DIR / "train_clean.csv",
+):
+    df = pd.read_csv(data_path)
+    
+    exclude = ["event", "time_to_hit_hours", "event_id"]
+    target = ["event", "time_to_hit_hours"]
+    
+    
+    
 
 if __name__ == "__main__":
 
@@ -171,7 +191,6 @@ if __name__ == "__main__":
         FilterTargetCorrelated(l_threshold=0.1),
         ReduceByPCA(n_features=6)
     ])
-    
 
     X_train_filtered = pipeline(X_train, y_train)
     print(X_train_filtered.columns)
