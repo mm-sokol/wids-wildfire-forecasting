@@ -48,11 +48,11 @@ def objective(trial: Trial, model_name: str, X, y, n_splits: int = 5):
         if model_name == "rsf":
             c_index = model._model.score(X_val, y[val_idx])
         elif model_name == "weibull_aft":
-            predicted_times = model.predict_median(X_val)
+            predicted_times = model._model.predict_median(X_val)
 
             c_index = concordance_index(
-                actual_time=y_val['time_to_hit_hours'], 
-                predicted_time=predicted_times, 
+                event_times=y_val['time_to_hit_hours'], 
+                predicted_scores=predicted_times, 
                 event_observed=y_val['event'] 
             )
         elif model_name == "xgb":
