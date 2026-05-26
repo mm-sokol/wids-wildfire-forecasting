@@ -26,11 +26,18 @@ def _predict_sksurv(model, X, cols):
     return pd.DataFrame(rows)
 
 class RSFModel:
+    
+    def __init__(self, n_estimators=300, min_samples_split=10, min_samples_leaf=6, max_features="sqrt"):
+        self.n_estimators = n_estimators
+        self.min_samples_split = min_samples_split
+        self.min_samples_leaf = min_samples_leaf
+        self.max_features = max_features
+    
     def fit(self, X, y):
         self._cols = list(X.columns)
         self._model = RandomSurvivalForest(
-            n_estimators=300, min_samples_split=10, min_samples_leaf=6,
-            max_features="sqrt", n_jobs=-1, random_state=42,
+            n_estimators=self.n_estimators, min_samples_split=self.min_samples_split, min_samples_leaf=self.min_samples_leaf,
+            max_features=self.max_features, n_jobs=-1, random_state=42,
         )
         self._model.fit(X[self._cols], y)
         return self
@@ -42,12 +49,15 @@ class RSFModel:
         return pd.Series(self._model.feature_importances_, index=self._cols).sort_values(ascending=False)
 
 class WeibullAFT:
+    def __init__(self, penalizer=0.1):
+        self.penalizer = penalizer
+
     def fit(self, X, y):
         self._cols = list(X.columns)
         df = X.copy()
         df["time_to_hit_hours"] = y["time_to_hit_hours"]
         df["event"] = y["event"].astype(int)
-        self._model = WeibullAFTFitter(penalizer=0.1)
+        self._model = WeibullAFTFitter(penalizer=self.penalizer)
 
         self._model.fit(df, duration_col="time_to_hit_hours", event_col="event")
         return self
@@ -61,16 +71,23 @@ class WeibullAFT:
         return pd.DataFrame(rows)
 
 class XGBSurvival:
+    def __init__(self, n_estimators=200, learning_rate=0.05, max_depth=4, subsample=0.8, colsample_bytree=0.8):
+        self.n_estimators = n_estimators
+        self.learning_rate = learning_rate
+        self.max_depth = max_depth
+        self.subsample = subsample
+        self.colsample_bytree = colsample_bytree
+
     def fit(self, X, y):
         self._cols = list(X.columns)
         labels = np.where(y["event"], y["time_to_hit_hours"], -y["time_to_hit_hours"])
         self._model = xgb.XGBRegressor(
             objective="survival:cox",
-            n_estimators=200,
-            learning_rate=0.05,
-            max_depth=4,
-            subsample=0.8,
-            colsample_bytree=0.8,
+            n_estimators=self.n_estimators,
+            learning_rate=self.learning_rate,
+            max_depth=self.max_depth,
+            subsample=self.subsample,
+            colsample_bytree=self.colsample_bytree,
             random_state=42
         )
         self._model.fit(X[self._cols], labels)

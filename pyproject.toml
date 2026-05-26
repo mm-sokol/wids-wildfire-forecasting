@@ -10,6 +10,7 @@ dependencies = [
     "lightgbm>=4.6.0",
     "logging>=0.4.9.6",
     "numpy>=2.4.3",
+    "optuna>=4.8.0",
     "pandas>=3.0.1",
     "pytest>=9.0.3",
     "scikit-learn>=1.8.0",
