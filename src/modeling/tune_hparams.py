@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from sklearn.model_selection import KFold, StratifiedKFold
+from sklearn.model_selection import KFold, StratifiedKFold, train_test_split
 from config import MODELS_DIR, PROCESSED_DATA_DIR
 
 from optuna import Trial, create_study
@@ -87,11 +87,19 @@ def main(
     X = pd.read_csv(features_path)
     y = X[["event", "time_to_hit_hours"]]
     X = X.drop(columns=["time_to_hit_hours", "event"])
+    
+    X_train, _, y_train, _ = train_test_split(
+        X, 
+        y,
+        test_size=0.2, 
+        random_state=222,
+        stratify=y['event']
+    )
 
     y_structured = Surv.from_dataframe(
         event='event', 
         time='time_to_hit_hours', 
-        data=y
+        data=y_train.reset_index(drop=True)
     )
     
     # Apply feature selection
@@ -101,14 +109,14 @@ def main(
         FilterByL1(filter_strength=0.03)
     ])
     
-    X = pipeline(X, y)
-    print(f"Number of features after selection: {X.shape[1]}")
+    X_train = pipeline(X_train, y_train)
+    print(f"Number of features after selection: {X_train.shape[1]}")
 
     # return
     for model_name in ["rsf", "weibull_aft", "xgb"]:
         print(f"Tuning hyperparameters for {model_name}...")
         
-        tune_hyperparameters(model_name, X, y_structured, n_trials=50, save_path=model_path)
+        tune_hyperparameters(model_name, X_train, y_structured, n_trials=50, save_path=model_path)
         
         
 

@@ -22,3 +22,15 @@ MODELS_DIR = PROJ_ROOT / "models"
 
 REPORTS_DIR = PROJ_ROOT / "reports"
 FIGURES_DIR = REPORTS_DIR / "figures"
+SEED = 222
+
+
+
+def seed_everything(seed: int = SEED):
+    import random
+    import numpy as np
+    import os
+
+    random.seed(seed)
+    np.random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)

@@ -112,9 +112,9 @@ class Ensemble:
 
 def build_models():
     return {
-        "rsf": RSFModel(),
-        "weibull_aft": WeibullAFT(),
-        "xgb": XGBSurvival(),
+        "rsf": lambda params: RSFModel(**params),
+        "weibull_aft": lambda params: WeibullAFT(**params),
+        "xgb": lambda params: XGBSurvival(**params),
     }
 
 def fit_all(models, X, y):

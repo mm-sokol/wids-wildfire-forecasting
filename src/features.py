@@ -164,9 +164,25 @@ def main(
     data_path: Path = PROCESSED_DATA_DIR / "train_clean.csv",
 ):
     df = pd.read_csv(data_path)
-    
+
     exclude = ["event", "time_to_hit_hours", "event_id"]
     target = ["event", "time_to_hit_hours"]
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        df[[c for c in df.columns if c not in exclude]],
+        df[target], 
+        test_size=0.2, 
+        random_state=222,
+    )
+
+    pipeline = FeatureSelectionPipeline(filters=[
+        FilterCorrelated(h_threshold=0.9),
+        FilterTargetCorrelated(l_threshold=0.1),
+        ReduceByPCA(n_features=6)
+    ])
+
+    X_train_filtered = pipeline(X_train, y_train)
+    print(X_train_filtered.columns)
     
     
     

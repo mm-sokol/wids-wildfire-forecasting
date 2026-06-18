@@ -22,7 +22,7 @@ def sample_training_data():
 
     X_train, _, y_train, _ = train_test_split(
         df[[c for c in df.columns if c not in unused]], 
-        df['event'], 
+        df[['event', 'time_to_hit_hours']], 
         test_size=0.2, 
         random_state=222,
         stratify=df['event']
