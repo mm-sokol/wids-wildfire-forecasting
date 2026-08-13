@@ -2,21 +2,19 @@
 Code to create features for modeling
 """
 
-from pathlib import Path
-import pandas as pd
-import numpy as np
-
-from sklearn.linear_model import Lasso
-from sklearn.feature_selection import RFECV, SelectFromModel
-from sklearn.model_selection import check_cv, train_test_split
-from sklearn.base import BaseEstimator
-from sklearn.decomposition import PCA
-
 from abc import ABC, abstractmethod
 from logging import getLogger
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+from lifelines import CoxPHFitter
+from sklearn.base import BaseEstimator
+from sklearn.decomposition import PCA
+from sklearn.feature_selection import RFECV
+from sklearn.model_selection import check_cv, train_test_split
 
 from config import PROCESSED_DATA_DIR
-from lifelines import CoxPHFitter 
 
 logger = getLogger(__name__)
 
@@ -97,11 +95,11 @@ class ReduceByPCA(FeatureFilterBase):
             n_features_actual = limit
 
         elif n_data_features < 2:
-            logger.warning("Number of X_train features ({}) is too low. PCA will not reduce dimensionality.", n_data_features)
+            logger.warning("Number of X_train features ({}) is too low. PCA will not reduce dimensionality.", n_data_features)  # noqa: PLE1205
             n_features_actual = n_data_features
             
         elif self.n_features > n_data_features:
-            logger.info("Number of X_train features ({}) is not greater than n_features ({}) given to PCA", n_data_features, self.n_features)
+            logger.info("Number of X_train features ({}) is not greater than n_features ({}) given to PCA", n_data_features, self.n_features)  # noqa: PLE1205
             logger.info("PCA will reduce dimensionality by one.")
             n_features_actual = self.n_features-1
             
@@ -146,14 +144,14 @@ class FilterByRFECV():
 
         return X_train[selected_features], y_train
 
-class FeatureSelectionPipeline():
+class FeatureSelectionPipeline:
     
     def __init__(self, filters: list[FeatureFilterBase]):
         self.filters = filters
     
     def __call__(self, X_train: pd.DataFrame, y_train: pd.Series) -> pd.DataFrame:
         if len(y_train) != len(X_train):
-            logger.error("Target series and train data have length mismatch ({}!={})", len(y_train), len(X_train))
+            logger.error(f"Target series and train data have length mismatch ({len(y_train)}!={len(X_train)})")
             
         for f in self.filters:
             X_train, y_train = f.apply(X_train, y_train)
@@ -168,7 +166,7 @@ def main(
     exclude = ["event", "time_to_hit_hours", "event_id"]
     target = ["event", "time_to_hit_hours"]
 
-    X_train, X_test, y_train, y_test = train_test_split(
+    X_train, _, y_train, _ = train_test_split(
         df[[c for c in df.columns if c not in exclude]],
         df[target], 
         test_size=0.2, 
