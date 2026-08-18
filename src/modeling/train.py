@@ -6,7 +6,7 @@ from logging import getLogger, basicConfig, INFO
 from pathlib import Path
 
 from config import MODELS_DIR, PROCESSED_DATA_DIR, seed_everything, SEED
-from modeling.models import build_models
+from modeling.utils import build_models
 
 import pandas as pd
 import numpy as np
